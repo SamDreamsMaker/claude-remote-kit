@@ -1,0 +1,27 @@
+# Claude Code local config
+.claude/
+
+# Memory (local persistent data)
+memory/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# WSL test artifacts (not needed in git)
+WSL example/.vagrant/

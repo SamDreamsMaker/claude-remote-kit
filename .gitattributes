@@ -1,0 +1,8 @@
+# Force LF for shell scripts (they run on Linux)
+*.sh text eol=lf
+
+# Keep CRLF for PowerShell (it runs on Windows)
+*.ps1 text eol=crlf
+
+# Default: normalize line endings
+* text=auto
