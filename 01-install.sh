@@ -492,6 +492,24 @@ chmod +x "$AGENT_HOME/scripts/agent-dev.sh"
 
 log "4 agent scripts installed"
 
+# ── Step 6b: Clone the full kit from GitHub ──
+KIT_DIR="$HOME/claude-remote-kit"
+REPO_URL="https://github.com/SamDreamsMaker/claude-remote-kit.git"
+
+info "Fetching full kit from GitHub..."
+if [ -d "$KIT_DIR/.git" ]; then
+    (cd "$KIT_DIR" && git pull --quiet 2>/dev/null) || true
+    log "Kit updated at $KIT_DIR"
+else
+    rm -rf "$KIT_DIR" 2>/dev/null || true
+    git clone --quiet "$REPO_URL" "$KIT_DIR"
+    log "Kit downloaded to $KIT_DIR"
+fi
+
+chmod +x "$KIT_DIR/01-install.sh" 2>/dev/null || true
+chmod +x "$KIT_DIR/02-install-telegram.sh" 2>/dev/null || true
+chmod +x "$KIT_DIR/start-claude-telegram.sh" 2>/dev/null || true
+
 # ── Step 7: Diagnostic script ──
 cat > "$AGENT_HOME/scripts/doctor.sh" << 'DOCTOR_EOF'
 #!/bin/bash
@@ -603,12 +621,7 @@ echo "  - Create a Telegram bot session"
 echo "  - Launch Claude Code (which will ask you to sign in)"
 echo "  - Connect it to your Telegram bot"
 echo ""
-
-# Make step 2 scripts executable if present
-chmod +x ~/02-install-telegram.sh 2>/dev/null || true
-chmod +x ~/start-claude-telegram.sh 2>/dev/null || true
-
 echo -e "  Run:"
 echo ""
-echo -e "  ${BLUE}~/02-install-telegram.sh${NC}"
+echo -e "  ${BLUE}$KIT_DIR/02-install-telegram.sh${NC}"
 echo ""

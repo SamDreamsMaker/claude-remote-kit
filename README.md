@@ -21,29 +21,22 @@ Each Telegram bot runs in its own screen session with its own working directory.
 
 ## Installation (2 steps)
 
-### Before you start: Copy files to the server
-
-From your Windows PC:
-
-```bash
-scp 01-install.sh 02-install-telegram.sh start-claude-telegram.sh your-user@SERVER-IP:~/
-```
-
-Then connect: `ssh your-user@SERVER-IP`
+Connect to your Ubuntu server: `ssh your-user@SERVER-IP`
 
 ### Step 1 of 2: Install
 
+One-liner bootstrap (downloads and runs the installer):
+
 ```bash
-chmod +x ~/01-install.sh
-~/01-install.sh
+curl -fsSL https://raw.githubusercontent.com/SamDreamsMaker/claude-remote-kit/main/01-install.sh -o /tmp/install.sh && bash /tmp/install.sh
 ```
 
-Automatically installs: Claude Code (latest), Bun, Node.js, screen, dependencies, configuration, security hooks, and agent scripts.
+Automatically installs: Claude Code (latest), Bun, Node.js, screen, dependencies, configuration, security hooks, and agent scripts. The full kit is cloned into `~/claude-remote-kit/`.
 
 ### Step 2 of 2: Connect Telegram
 
 ```bash
-~/02-install-telegram.sh
+~/claude-remote-kit/02-install-telegram.sh
 ```
 
 The script guides you step by step:

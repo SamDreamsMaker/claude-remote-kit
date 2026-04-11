@@ -70,30 +70,7 @@ if ($testResult -match "ok") {
     exit 0
 }
 
-# ── Step 4: Copy scripts into WSL ──
-Write-Host "[>>] Copying install scripts into WSL..." -ForegroundColor Blue
-
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$projectDir = Split-Path -Parent $scriptDir
-
-# Detect drive letter dynamically
-$driveLetter = $projectDir.Substring(0, 1).ToLower()
-
-# Copy each script to ~/ (same location as real scp deployment)
-foreach ($file in @("01-install.sh", "02-install-telegram.sh", "start-claude-telegram.sh")) {
-    $src = Join-Path $projectDir $file
-    $wslPath = ($src -replace '\\', '/' -replace "^[A-Za-z]:", "/mnt/$driveLetter")
-    wsl -d Ubuntu -- bash -c "cp '$wslPath' ~/ && chmod +x ~/$file"
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERR] Failed to copy $file" -ForegroundColor Red
-        exit 1
-    }
-}
-
-Write-Host "[OK] Scripts copied to ~/" -ForegroundColor Green
-
-# ── Step 5: Ready ──
+# ── Step 4: Ready ──
 Write-Host ""
 Write-Host "==============================================================" -ForegroundColor Green
 Write-Host "   TEST ENVIRONMENT READY!                                     " -ForegroundColor Green
@@ -103,13 +80,13 @@ Write-Host "  Enter the test environment:" -ForegroundColor White
 Write-Host ""
 Write-Host "    wsl -d Ubuntu" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  Then start the installation:" -ForegroundColor White
+Write-Host "  Then run the one-liner installer (same as a real server):" -ForegroundColor White
 Write-Host ""
-Write-Host "    ~/01-install.sh" -ForegroundColor Cyan
+Write-Host "    curl -fsSL https://raw.githubusercontent.com/SamDreamsMaker/claude-remote-kit/main/01-install.sh -o /tmp/install.sh && bash /tmp/install.sh" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  -- After editing scripts, re-copy with: --" -ForegroundColor Yellow
+Write-Host "  Then start Telegram setup:" -ForegroundColor White
 Write-Host ""
-Write-Host "    .\setup-test.ps1" -ForegroundColor Cyan
+Write-Host "    ~/claude-remote-kit/02-install-telegram.sh" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  -- To reset WSL completely: --" -ForegroundColor Yellow
 Write-Host ""
