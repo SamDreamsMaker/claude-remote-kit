@@ -179,12 +179,13 @@ fi
 
 log "Working directory: $WORK_DIR"
 
-# ── Save configuration ──
+# ── Save configuration (with bot token for multi-bot isolation) ──
 cat > "$BOTS_DIR/$SESSION_NAME.conf" << CONF_EOF
 # Claude Telegram session configuration: $SESSION_NAME
 # Created on $(date +%Y-%m-%d)
 SESSION_NAME="$SESSION_NAME"
 WORK_DIR="$WORK_DIR"
+BOT_TOKEN="$BOT_TOKEN"
 CONF_EOF
 chmod 600 "$BOTS_DIR/$SESSION_NAME.conf"
 log "Configuration saved to $BOTS_DIR/$SESSION_NAME.conf"
@@ -256,8 +257,9 @@ echo -e "${GREEN}  Follow the instructions on screen.${NC}"
 echo -e "${GREEN}  When done, detach with: Ctrl+A then D${NC}"
 echo ""
 
-# Launch Claude in a screen and immediately attach to it
-screen -S "$SCREEN_NAME" bash -c "cd \"$WORK_DIR\" && claude --channels plugin:telegram@claude-plugins-official; echo ''; echo 'Claude session ended unexpectedly.'; echo 'Possible causes:'; echo '  - Authentication expired (run: claude login or check your token)'; echo '  - Plugin not available (check your Claude Code version)'; echo '  - Network issue'; echo ''; echo 'To retry: ~/claude-agent/scripts/start-claude-telegram.sh $SESSION_NAME'; echo 'To diagnose: ~/claude-agent/scripts/doctor.sh'; echo ''; echo 'Press Enter to close.'; read"
+# Launch Claude in a screen with isolated bot token via env var
+# Each bot gets its own token so multiple bots can run in parallel
+screen -S "$SCREEN_NAME" bash -c "cd \"$WORK_DIR\" && TELEGRAM_BOT_TOKEN=\"$BOT_TOKEN\" claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions --permission-mode bypassPermissions; echo ''; echo 'Claude session ended unexpectedly.'; echo 'Possible causes:'; echo '  - Authentication expired (run: claude login or check your token)'; echo '  - Plugin not available (check your Claude Code version)'; echo '  - Network issue'; echo ''; echo 'To retry: ~/claude-agent/scripts/start-claude-telegram.sh $SESSION_NAME'; echo 'To diagnose: ~/claude-agent/scripts/doctor.sh'; echo ''; echo 'Press Enter to close.'; read"
 
 # User is back here after detaching or session ending
 echo ""

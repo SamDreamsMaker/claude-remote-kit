@@ -2,20 +2,24 @@
 
 Installation kit to run Claude Code as an autonomous agent on an Ubuntu server, with Telegram integration via the official Anthropic plugin.
 
+**Multi-bot ready** — run as many Claude bots as you want, each with its own Telegram bot, its own project, and its own isolated context.
+
 ## Kit Contents
 
 | File | Purpose |
 |---|---|
 | `01-install.sh` | Install Claude Code + dependencies + config + hooks + agent scripts |
-| `02-install-telegram.sh` | Official Telegram plugin setup (step-by-step guide) |
-| `start-claude-telegram.sh` | Telegram session manager (start, stop, list) |
+| `02-install-telegram.sh` | Add a new Telegram bot (step-by-step, noob-friendly) |
+| `start-claude-telegram.sh` | Multi-bot session manager (start, stop, list) |
 
-## Principle: 1 bot = 1 session = 1 isolated context
+## Principle: 1 bot = 1 project = 1 isolated context
 
-Each Telegram bot runs in its own screen session with its own working directory. This allows you to:
-- Keep projects separate (no context mixing)
-- Reduce token consumption
-- Manage each agent independently
+Each Telegram bot runs in its own screen session with:
+- Its **own Telegram bot token** (no conflict between bots)
+- Its **own working directory** (separate project per bot)
+- Its **own context** (no history mixing between projects)
+
+This means you can have one bot for your web app, another for your mobile app, another for DevOps — all running in parallel on the same server.
 
 ---
 
@@ -33,7 +37,7 @@ curl -fsSL https://raw.githubusercontent.com/SamDreamsMaker/claude-remote-kit/ma
 
 Automatically installs: Claude Code (latest), Bun, Node.js, screen, dependencies, configuration, security hooks, and agent scripts. The full kit is cloned into `~/claude-remote-kit/`.
 
-### Step 2 of 2: Connect Telegram
+### Step 2 of 2: Add a Telegram bot
 
 ```bash
 ~/claude-remote-kit/02-install-telegram.sh
@@ -45,37 +49,72 @@ The script guides you step by step:
 3. Name the session (e.g. `web-project`)
 4. Choose the working directory
 5. Launch Claude Code in a screen session
-6. Sign in with your Max account (Claude shows a URL, you paste back the code)
-7. Send a message to your bot on Telegram, get a pairing code, enter it in Claude
+6. Sign in with your Max account (one time only)
+7. Send a message to your bot on Telegram → it replies!
 
-Run the script again to add more bots.
+**Want another bot?** Just run the same script again with a new bot token.
 
 ---
 
-## Manage sessions
+## Manage your bots
 
 ```bash
-# View all sessions
+# See all bots and their status
 ~/claude-agent/scripts/start-claude-telegram.sh --list
 
-# Start a session
-~/claude-agent/scripts/start-claude-telegram.sh web-project
+# Start a specific bot
+~/claude-agent/scripts/start-claude-telegram.sh my-project
 
-# Start all sessions
+# Start ALL bots at once
 ~/claude-agent/scripts/start-claude-telegram.sh --start-all
 
-# Stop a session
-~/claude-agent/scripts/start-claude-telegram.sh --stop web-project
+# Stop a bot
+~/claude-agent/scripts/start-claude-telegram.sh --stop my-project
 
-# Stop all sessions
+# Stop all bots
 ~/claude-agent/scripts/start-claude-telegram.sh --stop-all
 
-# Attach to a screen
-screen -r claude-tg-web-project
+# Attach to a bot's screen (see what it's doing)
+screen -r claude-tg-my-project
 
-# Detach from a screen
+# Detach (leave it running in background)
 Ctrl+A then D
 ```
+
+### Example: 3 bots running in parallel
+
+```
+== Claude Telegram — Bot Central ==
+
+  ● web-app [running]
+    Directory: /home/user/projects/web-app
+    Token    : 123456789...
+
+  ● mobile-api [running]
+    Directory: /home/user/projects/mobile-api
+    Token    : 987654321...
+
+  ○ devops [stopped]
+    Directory: /home/user/infrastructure
+    Token    : 111222333...
+
+  2/3 bots running
+```
+
+---
+
+## Bot configuration files
+
+Each bot has a simple config file in `~/claude-agent/bots/`:
+
+```bash
+# ~/claude-agent/bots/my-project.conf
+SESSION_NAME="my-project"
+WORK_DIR="/home/user/projects/my-project"
+BOT_TOKEN="123456789:AAH..."
+```
+
+You can edit these files directly to change the working directory or token.
 
 ---
 
@@ -108,16 +147,26 @@ These scripts let you run Claude tasks from the command line:
 |---|---|
 | Global settings | `~/.claude/settings.json` |
 | Security hooks | `~/claude-agent/config/hooks/` |
-| Bot configurations | `~/claude-agent/bots/` |
+| Bot configurations | `~/claude-agent/bots/*.conf` |
 | Logs | `~/claude-agent/logs/` |
 
 ---
 
-## Session Expired?
+## Troubleshooting
 
-If Claude stops responding after a while:
+### Bot stopped responding?
 
-1. Reattach to the screen: `screen -r claude-tg-<session-name>`
-2. Claude will show a sign-in URL if the session expired — follow it
-3. Or run `~/claude-agent/scripts/doctor.sh` to diagnose
-4. Restart sessions: `~/claude-agent/scripts/start-claude-telegram.sh --start-all`
+1. Check status: `~/claude-agent/scripts/start-claude-telegram.sh --list`
+2. Reattach: `screen -r claude-tg-<session-name>`
+3. If auth expired, Claude shows a sign-in URL — follow it
+4. Restart: `~/claude-agent/scripts/start-claude-telegram.sh <session-name>`
+5. Diagnose: `~/claude-agent/scripts/doctor.sh`
+
+### After server reboot?
+
+All screen sessions are lost on reboot. Restart all bots with:
+```bash
+~/claude-agent/scripts/start-claude-telegram.sh --start-all
+```
+
+Or enable auto-start during the `02-install-telegram.sh` setup.
