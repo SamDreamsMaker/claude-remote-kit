@@ -116,6 +116,53 @@ BOT_TOKEN="123456789:AAH..."
 
 You can edit these files directly to change the working directory or token.
 
+**Add a new bot manually** (without the interactive script):
+
+```bash
+cat > ~/claude-agent/bots/my-new-bot.conf << 'EOF'
+SESSION_NAME="my-new-bot"
+WORK_DIR="/home/user/workspace/my-new-bot"
+BOT_TOKEN="YOUR_TOKEN_FROM_BOTFATHER"
+EOF
+mkdir -p ~/workspace/my-new-bot
+~/claude-agent/scripts/start-claude-telegram.sh my-new-bot
+```
+
+---
+
+## How it works (architecture)
+
+```
+~/workspace/                    ← All projects live here
+├── my-web-app/                 ← Bot 1's workspace
+├── my-api/                     ← Bot 2's workspace  
+└── my-mobile/                  ← Bot 3's workspace
+
+~/claude-agent/
+├── bots/                       ← One .conf per bot (token + workspace)
+│   ├── my-web-app.conf
+│   ├── my-api.conf
+│   └── my-mobile.conf
+├── scripts/                    ← Management scripts
+│   └── start-claude-telegram.sh
+├── config/hooks/               ← Security hooks (shared)
+└── logs/                       ← Log files
+
+~/.claude/
+├── settings.json               ← Global Claude settings
+├── channels/telegram/
+│   ├── .env                    ← Default token (overridden per bot via env var)
+│   └── access.json             ← Telegram access control (shared across bots)
+└── projects/                   ← Auto-created memories per workspace
+    ├── -home-user-workspace-my-web-app/
+    ├── -home-user-workspace-my-api/
+    └── -home-user-workspace-my-mobile/
+```
+
+Each bot runs in its own `screen` session. The bot token is passed via environment variable so multiple bots can run in parallel without conflict.
+
+**Note:** `access.json` is shared between all bots — if you pair with one bot, all bots on the same server will accept your messages. This is by design for simplicity.
+
 ---
 
 ## Agent Scripts (outside Telegram)

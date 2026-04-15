@@ -111,11 +111,9 @@ if [ -z "$BOT_TOKEN" ]; then
     exit 1
 fi
 
-# Save token to Claude's channel config
-mkdir -p "$HOME/.claude/channels/telegram"
-echo "TELEGRAM_BOT_TOKEN=$BOT_TOKEN" > "$HOME/.claude/channels/telegram/.env"
-chmod 600 "$HOME/.claude/channels/telegram/.env"
-log "Bot token saved"
+# Token is saved per-bot in the .conf file (not in a shared .env)
+# This allows multiple bots to run in parallel with different tokens
+log "Bot token will be saved in the session config"
 
 # ── Ask for session name ──
 echo -e "${YELLOW}══════════════════════════════════════════════════════════════${NC}"
@@ -154,17 +152,19 @@ fi
 log "Session: $SESSION_NAME"
 
 # ── Working directory ──
+DEFAULT_WORK_DIR="$HOME/workspace/$SESSION_NAME"
+
 echo ""
 echo -e "${YELLOW}══════════════════════════════════════════════════════════════${NC}"
 echo -e "${YELLOW}   Working directory                                          ${NC}"
 echo -e "${YELLOW}══════════════════════════════════════════════════════════════${NC}"
 echo ""
 echo "  Which directory should Claude work in for this session?"
-echo "  (Leave empty to use $HOME)"
+echo "  (Leave empty to use: $DEFAULT_WORK_DIR)"
 echo ""
 
 read -p "  Working directory: " WORK_DIR
-WORK_DIR="${WORK_DIR:-$HOME}"
+WORK_DIR="${WORK_DIR:-$DEFAULT_WORK_DIR}"
 
 # Create directory if it doesn't exist
 if [ ! -d "$WORK_DIR" ]; then
