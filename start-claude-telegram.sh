@@ -73,7 +73,9 @@ start_session() {
 
     # Launch Claude with isolated bot token via env var
     # This ensures each bot uses its own token, not the shared .env
-    screen -dmS "$SCREEN_NAME" bash -c "cd \"$WORK_DIR\" && TELEGRAM_BOT_TOKEN=\"$BOT_TOKEN\" claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions --permission-mode bypassPermissions"
+    # exec replaces the bash wrapper so claude becomes the screen's session
+    # leader — required for the telegram MCP plugin server to spawn.
+    screen -dmS "$SCREEN_NAME" bash -c "cd \"$WORK_DIR\" && TELEGRAM_BOT_TOKEN=\"$BOT_TOKEN\" exec claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions --permission-mode bypassPermissions"
 
     sleep 2
 
