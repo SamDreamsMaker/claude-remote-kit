@@ -21,6 +21,39 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+pre_accept_trust() {
+    local WORK_DIR="$1"
+    local CLAUDE_JSON="$HOME/.claude.json"
+
+    [ -z "$WORK_DIR" ] && return 0
+    [ ! -f "$CLAUDE_JSON" ] && return 0
+    command -v python3 >/dev/null 2>&1 || return 0
+
+    WORK_DIR="$WORK_DIR" python3 - "$CLAUDE_JSON" <<'PY' 2>/dev/null || true
+import json, os, sys
+path = sys.argv[1]
+wd = os.environ["WORK_DIR"]
+try:
+    with open(path) as f:
+        d = json.load(f)
+except Exception:
+    sys.exit(0)
+projects = d.setdefault("projects", {})
+proj = projects.setdefault(wd, {
+    "allowedTools": [], "mcpContextUris": [], "mcpServers": {},
+    "enabledMcpjsonServers": [], "disabledMcpjsonServers": [],
+    "history": [], "exampleFiles": [], "exampleFilesGeneratedAt": 0,
+})
+if proj.get("hasTrustDialogAccepted") is True:
+    sys.exit(0)
+proj["hasTrustDialogAccepted"] = True
+tmp = path + ".tmp"
+with open(tmp, "w") as f:
+    json.dump(d, f, indent=2)
+os.replace(tmp, path)
+PY
+}
+
 usage() {
     echo ""
     echo -e "${BLUE}Claude Code Telegram — Multi-Bot Manager${NC}"
@@ -70,6 +103,12 @@ start_session() {
 
     # Create working directory if needed
     mkdir -p "$WORK_DIR" 2>/dev/null || true
+
+    # Pre-accept the "trust folder" dialog for this workspace.
+    # Without this, a freshly-created workspace shows an interactive trust
+    # prompt on first launch — and until it's confirmed, the Telegram
+    # channel polling never starts, so inbound messages silently time out.
+    pre_accept_trust "$WORK_DIR"
 
     # Launch Claude with isolated bot token via env var
     # This ensures each bot uses its own token, not the shared .env

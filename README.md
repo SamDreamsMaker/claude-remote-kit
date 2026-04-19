@@ -209,6 +209,16 @@ These scripts let you run Claude tasks from the command line:
 4. Restart: `~/claude-agent/scripts/start-claude-telegram.sh <session-name>`
 5. Diagnose: `~/claude-agent/scripts/doctor.sh`
 
+### Bot doesn't respond on first launch (new workspace)?
+
+On a freshly-created workspace, Claude Code shows an interactive "trust folder" safety prompt on first launch. Until it's confirmed, the Telegram channel polling never starts, so inbound messages silently time out.
+
+`start-claude-telegram.sh` now pre-accepts this dialog automatically by setting `hasTrustDialogAccepted: true` for the workspace in `~/.claude.json` before launching Claude. If you see a bot that's stuck (screen shows the trust prompt), you can unblock it by pressing Enter:
+
+```bash
+screen -S claude-tg-<session-name> -X stuff $'\r'
+```
+
 ### After server reboot?
 
 All screen sessions are lost on reboot. Restart all bots with:
